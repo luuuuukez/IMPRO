@@ -20,8 +20,8 @@ app.on('window-all-closed', () => {
 
 function createOrbWindow() {
   orbWindow = new BrowserWindow({
-    width: 160,
-    height: 160,
+    width: 200,
+    height: 200,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
@@ -90,7 +90,8 @@ function showBubble(text) {
   let bx = orb.x + orb.width / 2 - bw / 2;
   bx = Math.max(5, Math.min(bx, sw - bw - 5));
 
-  let by = orb.y - bh - 4; // default: above
+  const orbPadding = 60;
+  let by = orb.y + orbPadding - bh - 8; // default: above
   if (by < 5) by = orb.y + orb.height + 8; // flip below if near top
 
   bubbleWindow.setPosition(Math.round(bx), Math.round(by));
@@ -180,7 +181,8 @@ ipcMain.on('move-window', (e, { x, y }) => {
       const bw = 280, bh = 100;
       let bx = orb.x + orb.width / 2 - bw / 2;
       bx = Math.max(5, Math.min(bx, sw - bw - 5));
-      let by = orb.y - bh - 4;
+      const orbPadding = 60;
+      let by = orb.y + orbPadding - bh - 8;
       if (by < 5) by = orb.y + orb.height + 8;
       bubbleWindow.setPosition(Math.round(bx), Math.round(by));
     }

@@ -4,6 +4,7 @@ import './orb.css';
 const MESSAGES = {
   greeting: "Good morning. How's work going today?",
   idle:     "Haven't checked your skill gaps recently. Want a quick update?",
+  hover:    "Hei, are you curios your skill gap?",
 };
 
 export default function Orb() {
@@ -13,16 +14,15 @@ export default function Orb() {
   const bubbleTimer = useRef(null);
   const idleTimer   = useRef(null);
 
-  const showBubble = useCallback((type) => {
-    setNudging(true);
+  const showBubble = useCallback((type, nudge = true) => {
+    if (nudge) setNudging(true);
     window.electronAPI?.showBubble(MESSAGES[type]);
     if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
     bubbleTimer.current = setTimeout(() => {
       window.electronAPI?.hideBubble();
-      setNudging(false);
+      if (nudge) setNudging(false);
     }, 6000);
-    // nudge animation is short — remove class after it finishes
-    setTimeout(() => setNudging(false), 700);
+    if (nudge) setTimeout(() => setNudging(false), 1000);
   }, []);
 
   const resetIdle = useCallback(() => {
@@ -107,8 +107,8 @@ export default function Orb() {
           dropOver ? 'orb-wrapper--drop'  : '',
         ].join(' ')}
         onMouseDown={handleMouseDown}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onMouseEnter={() => { setHovered(true); showBubble('hover', false); }}
+        onMouseLeave={() => { setHovered(false); window.electronAPI?.hideBubble(); }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}

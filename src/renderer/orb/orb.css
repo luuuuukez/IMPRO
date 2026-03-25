@@ -7,16 +7,16 @@
 }
 
 html, body {
-  width: 160px;
-  height: 160px;
+  width: 200px;
+  height: 200px;
   background: transparent;
   overflow: hidden;
 }
 
 /* ── Root — centers the orb with 40px padding on every side ── */
 .orb-root {
-  width: 160px;
-  height: 160px;
+  width: 200px;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -36,6 +36,34 @@ html, body {
   cursor: pointer;
 }
 
+/* ── Animated halo ring around the orb edge ─────────────────── */
+.orb-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: -14px;          /* 14px beyond the 80×80 wrapper = 108×108 */
+  border-radius: 50%;
+  /* soft arc: transparent centre + dim outer, with a bright sector */
+  background: conic-gradient(
+    from 0deg,
+    transparent          0deg,
+    rgba(80, 140, 255, 0.45) 60deg,
+    rgba(130, 80, 255, 0.30) 120deg,
+    transparent         180deg,
+    rgba(60, 180, 255, 0.35) 270deg,
+    transparent         360deg
+  );
+  filter: blur(9px);
+  animation: halo-spin 3.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes halo-spin {
+  0%   { transform: rotate(0deg);   opacity: 0.35; }
+  40%  { transform: rotate(145deg); opacity: 0.55; }
+  70%  { transform: rotate(230deg); opacity: 0.30; }
+  100% { transform: rotate(360deg); opacity: 0.35; }
+}
+
 /* ── Orb sphere ─────────────────────────────────────────────── */
 .orb {
   width: 80px;
@@ -45,25 +73,51 @@ html, body {
   position: relative;
 
   background: radial-gradient(circle at 35% 35%,
-  rgba(255, 255, 255, 0.95)  0%,
-  rgba(200, 220, 255, 0.80) 20%,
+  rgba(255, 255, 255, 0.85)  5%,
+  rgba(200, 220, 255, 0.80) 25%,
   rgba(80,  140, 255, 0.40) 45%,
-  rgba(40,   80, 220, 0.55) 70%,
-  rgba(100,  60, 255, 0.45) 100%
+  rgba(40, 100, 220, 0.55) 50%,
+  rgba(225, 221, 255, 0.45) 95%
 );
 
-  border: 1px solid rgba(255, 255, 255, 0.42);
+  border: none;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 
   box-shadow:
-  inset 0 0 30px rgba(255, 255, 255, 0.20),
-  inset 2px 2px 10px rgba(255, 255, 255, 0.35),
-  inset -4px -4px 20px rgba(80, 120, 255, 0.30),
-  0 0 28px rgba(100, 150, 255, 0.35),
-  0 0 56px rgba(100, 150, 255, 0.18);
+    inset 0 0 30px rgba(255, 255, 255, 0.20),
+    inset 2px 2px 10px rgba(255, 255, 255, 0.35),
+    inset -4px -4px 20px rgba(25, 50, 131, 0.30);
 
   transition: box-shadow 0.35s ease;
+  animation: wobble 4.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ── Inner gradient wash — rotates slowly so light "moves" ─── */
+.orb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  /* uneven conic so the bright arc shifts as it rotates */
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    rgba(120, 180, 255, 0.28)  0deg,
+    rgba(160, 100, 255, 0.18) 80deg,
+    rgba(60,  200, 255, 0.22) 160deg,
+    rgba(100, 140, 255, 0.12) 240deg,
+    rgba(200, 120, 255, 0.20) 300deg,
+    rgba(120, 180, 255, 0.28) 360deg
+  );
+  animation: inner-rotate 8s linear infinite;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+@keyframes inner-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 /* ── Internal light blobs ───────────────────────────────────── */
@@ -173,6 +227,15 @@ html, body {
       drop-shadow(0 16px 28px rgba(70, 140, 255, 0.46))
       drop-shadow(0  4px  9px rgba(0,   0,   0,  0.18));
   }
+}
+
+/* ── Organic shape wobble — scaleX/Y offset by half phase ────── */
+@keyframes wobble {
+  0%    { transform: scaleX(1.000) scaleY(1.000); }
+  22%   { transform: scaleX(1.018) scaleY(0.982); }
+  45%   { transform: scaleX(1.000) scaleY(1.000); }
+  68%   { transform: scaleX(0.983) scaleY(1.017); }
+  100%  { transform: scaleX(1.000) scaleY(1.000); }
 }
 
 @keyframes nudge {
