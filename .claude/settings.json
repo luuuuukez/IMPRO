@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./node_modules/.bin/electron --version)",
+      "Bash(node_modules/electron/dist/Electron.app/Contents/MacOS/Electron --version)",
+      "Bash(node_modules/electron/dist/Electron.app/Contents/MacOS/Electron --js-flags=--version)",
+      "Bash(/Users/luuuuuuke/Desktop/IMPRO/test_electron2.js:*)",
+      "Bash(node_modules/electron/dist/Electron.app/Contents/MacOS/Electron /Users/luuuuuuke/Desktop/IMPRO/test_electron2.js)",
+      "Bash(xattr -cr node_modules/electron/dist/Electron.app)",
+      "Bash(./node_modules/.bin/electron .)",
+      "Bash(npm show:*)",
+      "Bash(node -e \"const d=require\\(''''fs''''\\).readFileSync\\(''''/dev/stdin'''',''''utf8''''\\); const v=JSON.parse\\(d\\); console.log\\(v.filter\\(x=>x.startsWith\\(''''3''''\\)\\).slice\\(-10\\).join\\(''''\\\\n''''\\)\\)\")",
+      "Read(//private/tmp/**)",
+      "Bash(src/main/main.js:*)",
+      "Bash(rm -f src/main/main.js.bak src/main/preload-fix.js test_electron*.js test_main.js)",
+      "Bash(rm -f /tmp/impro_debug.log /tmp/node_init_src.js /tmp/browser_relevant.txt /tmp/make_electron_module.txt)"
+    ]
+  }
+}
