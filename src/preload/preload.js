@@ -5,13 +5,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   closeChat:       () => ipcRenderer.send('close-chat'),
   getWindowPosition: () => ipcRenderer.invoke('get-window-position'),
   moveWindow:      (x, y) => ipcRenderer.send('move-window', { x, y }),
-  notifyFileDrop:  () => ipcRenderer.send('file-dropped'),
+  notifyFileDrop:  (name, filePath) => ipcRenderer.send('file-dropped', { name, path: filePath }),
+  analyseFile:     (filePath, fileName) => ipcRenderer.invoke('analyse-file', { filePath, fileName }),
   showBubble:      (text) => ipcRenderer.send('show-bubble', text),
   hideBubble:      () => ipcRenderer.send('hide-bubble'),
+  openReport:      () => ipcRenderer.send('open-report'),
 
   onFileDrop: (cb) => {
-    ipcRenderer.on('file-dropped', cb);
-    return () => ipcRenderer.removeListener('file-dropped', cb);
+    const handler = (_, { name, path: filePath } = {}) => cb(name, filePath);
+    ipcRenderer.on('file-dropped', handler);
+    return () => ipcRenderer.removeListener('file-dropped', handler);
   },
   onBubbleText: (cb) => {
     const handler = (_, text) => cb(text);

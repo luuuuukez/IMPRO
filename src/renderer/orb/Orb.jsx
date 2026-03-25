@@ -92,8 +92,16 @@ export default function Orb() {
   const handleDrop      = (e) => {
     e.preventDefault();
     setDropOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      console.log('[IMPRO] File dropped (orb):', {
+        name: file.name,
+        size: file.size,
+        path: file.path,
+      });
+    }
     window.electronAPI.openChat();
-    window.electronAPI.notifyFileDrop();
+    window.electronAPI.notifyFileDrop(file?.name ?? null, file?.path ?? null);
     resetIdle();
   };
 

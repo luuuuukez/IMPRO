@@ -26,24 +26,39 @@ function SkillBar({ label, score, color }) {
   );
 }
 
-function SkillCard() {
+function SkillCard({ data }) {
+  // Derive scores from real data (ratio of strengths to total mentions)
+  const score = (cat) => {
+    const s = cat?.strengths?.length ?? 0;
+    const g = cat?.gaps?.length ?? 0;
+    return s + g === 0 ? 50 : Math.round((s / (s + g)) * 100);
+  };
+
+  const techScore = data ? score(data.technical) : 72;
+  const cogScore  = data ? score(data.cognitive)  : 58;
+  const socScore  = data ? score(data.social)     : 45;
+  const topGap    = data
+    ? (data.technical?.gaps?.[0] ?? data.cognitive?.gaps?.[0] ?? data.social?.gaps?.[0] ?? 'None identified')
+    : 'Distributed systems';
+  const recNote   = data ? data.recommendations?.[0] : '— trending up in market';
+
   return (
     <div className="skill-card">
       <div className="skill-role">
         <span className="skill-role-icon">⬡</span>
-        Full Stack Developer
+        {data ? 'Skill Profile' : 'Full Stack Developer'}
       </div>
-      <SkillBar label="Technical" score={72} color="linear-gradient(90deg,#7c3aed,#a855f7)" />
-      <SkillBar label="Cognitive" score={58} color="linear-gradient(90deg,#6d28d9,#8b5cf6)" />
-      <SkillBar label="Social"    score={45} color="linear-gradient(90deg,#5b21b6,#7c3aed)" />
+      <SkillBar label="Technical" score={techScore} color="linear-gradient(90deg,#6366f1,#818cf8)" />
+      <SkillBar label="Cognitive" score={cogScore}  color="linear-gradient(90deg,#3b82f6,#60a5fa)" />
+      <SkillBar label="Social"    score={socScore}   color="linear-gradient(90deg,#0ea5e9,#38bdf8)" />
       <div className="skill-gap">
         <span className="gap-icon">↑</span>
         <div>
-          <strong>Top gap:</strong> Distributed systems<br />
-          <span className="gap-sub">— trending up in market</span>
+          <strong>Top gap:</strong> {topGap}<br />
+          {recNote && <span className="gap-sub">{recNote}</span>}
         </div>
       </div>
-      <a href="#" className="skill-link" onClick={(e) => e.preventDefault()}>
+      <a href="#" className="skill-link" onClick={() => window.electronAPI.openReport()}>
         View full report →
       </a>
     </div>
@@ -57,7 +72,7 @@ function Message({ msg }) {
       {isAI && <div className="msg-avatar">I</div>}
       <div className={`msg-bubble ${isAI ? 'msg-bubble--ai' : 'msg-bubble--user'}`}>
         {msg.type === 'card' ? (
-          <SkillCard />
+          <SkillCard data={msg.cardData} />
         ) : (
           msg.text.split('\n').map((line, i) => (
             <span key={i}>{line}{i < msg.text.split('\n').length - 1 && <br />}</span>
@@ -87,8 +102,8 @@ export default function Chat() {
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
-  const addAI = (text, type = 'text') => {
-    setMessages((m) => [...m, { id: uid(), role: 'ai', type, text }]);
+  const addAI = (text, type = 'text', cardData = null) => {
+    setMessages((m) => [...m, { id: uid(), role: 'ai', type, text, cardData }]);
   };
 
   const scrollBottom = () => {
@@ -97,25 +112,43 @@ export default function Chat() {
 
   useEffect(() => { scrollBottom(); }, [messages, typing]);
 
-  // Listen for file drop from orb
+  // Listen for file drop relayed from orb window
   useEffect(() => {
     if (!window.electronAPI?.onFileDrop) return;
-    const unsub = window.electronAPI.onFileDrop(() => handleFileAnalysis());
+    const unsub = window.electronAPI.onFileDrop((name, filePath) => handleFileAnalysis(name, filePath));
     return unsub;
   }, []);
 
-  const handleFileAnalysis = () => {
+  const handleFileAnalysis = async (filename, filePath) => {
+    const label = filename || 'your file';
     setTyping(true);
-    setTimeout(() => {
-      setTyping(false);
-      addAI('Got it. Analysing your skill profile...');
-      setTyping(true);
-      setTimeout(() => {
+    await new Promise((r) => setTimeout(r, 400));
+    setTyping(false);
+    addAI(`Got it. Analysing ${label}...`);
+    setTyping(true);
+
+    try {
+      if (filePath && window.electronAPI?.analyseFile) {
+        const result = await window.electronAPI.analyseFile(filePath, filename);
         setTyping(false);
-        addAI('Analysis complete. Here\'s what I found:');
-        setTimeout(() => addAI('', 'card'), 300);
-      }, 2000);
-    }, 400);
+        if (result.success) {
+          addAI("Analysis complete. Here's what I found:");
+          setTimeout(() => addAI('', 'card', result.data), 300);
+        } else {
+          addAI(`Couldn't analyse that file: ${result.error}`);
+        }
+      } else {
+        // Fallback mock when no path available
+        await new Promise((r) => setTimeout(r, 2000));
+        setTyping(false);
+        addAI("Analysis complete. Here's what I found:");
+        setTimeout(() => addAI('', 'card', null), 300);
+      }
+    } catch (err) {
+      setTyping(false);
+      addAI('Something went wrong during analysis. Please try again.');
+      console.error('[IMPRO] handleFileAnalysis error:', err);
+    }
   };
 
   const sendMessage = () => {
@@ -151,7 +184,17 @@ export default function Chat() {
   const handleDrop = (e) => {
     e.preventDefault();
     setDropOver(false);
-    handleFileAnalysis();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      console.log('[IMPRO] File dropped (chat):', {
+        name: file.name,
+        size: file.size,
+        path: file.path,
+      });
+      handleFileAnalysis(file.name, file.path);
+    } else {
+      handleFileAnalysis();
+    }
   };
 
   const close = () => window.electronAPI?.closeChat();

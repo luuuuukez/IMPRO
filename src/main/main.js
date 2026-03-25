@@ -1,11 +1,19 @@
+require('dotenv').config();
 const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
+const fs = require('fs');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { getSystemPrompt } = require('../../prompts/system-prompt');
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 let orbWindow = null;
 let chatWindow = null;
 let bubbleWindow = null;
+let reportWindow = null;
 let bubbleReady = false;
 let pendingBubble = null;
+let lastAnalysisResult = null;
 
 app.whenReady().then(() => {
   createOrbWindow();
@@ -38,7 +46,7 @@ function createOrbWindow() {
   orbWindow.loadFile(path.join(__dirname, '../../public/orb.html'));
 
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-  orbWindow.setPosition(width - 175, height - 175);
+  orbWindow.setPosition(width - 250, height - 200);
 }
 
 // ── Bubble window ─────────────────────────────────────────────────────────────
@@ -189,11 +197,74 @@ ipcMain.on('move-window', (e, { x, y }) => {
   }
 });
 
-ipcMain.on('show-bubble', (e, text) => showBubble(text));
+ipcMain.on('show-bubble', (_e, text) => showBubble(text));
 ipcMain.on('hide-bubble', () => hideBubble());
 
-ipcMain.on('file-dropped', () => {
+ipcMain.on('file-dropped', (_e, { name, path: filePath } = {}) => {
   if (chatWindow && !chatWindow.isDestroyed()) {
-    chatWindow.webContents.send('file-dropped');
+    chatWindow.webContents.send('file-dropped', { name, path: filePath });
   }
 });
+
+ipcMain.handle('analyse-file', async (_e, { filePath, fileName }) => {
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      systemInstruction: getSystemPrompt(),
+    });
+
+    const result = await model.generateContent(content);
+    const raw = result.response.text().trim()
+      .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '');
+
+    console.log('[IMPRO] Gemini raw response for', fileName, ':\n', raw);
+
+    const data = JSON.parse(raw);
+    console.log('[IMPRO] Parsed analysis:', JSON.stringify(data, null, 2));
+
+    lastAnalysisResult = data;
+    if (chatWindow && !chatWindow.isDestroyed()) {
+      chatWindow.webContents.send('analysis-complete', data);
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    console.error('[IMPRO] analyse-file error:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
+// ── Report window ─────────────────────────────────────────────────────────────
+
+function createReportWindow() {
+  if (reportWindow && !reportWindow.isDestroyed()) {
+    reportWindow.focus();
+    return;
+  }
+
+  reportWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    frame: true,
+    alwaysOnTop: false,
+    skipTaskbar: false,
+    hasShadow: true,
+    resizable: true,
+    webPreferences: {
+      preload: path.join(__dirname, '../preload/preload-report.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  reportWindow.loadFile(path.join(__dirname, '../../result/index.html'));
+  reportWindow.on('closed', () => { reportWindow = null; });
+}
+
+// ── Additional IPC ────────────────────────────────────────────────────────────
+
+ipcMain.handle('get-analysis-data', () => lastAnalysisResult);
+
+ipcMain.on('open-report', () => createReportWindow());
