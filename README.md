@@ -1,50 +1,71 @@
-# IMPRO
+# IMPRO — AI Career Growth Companion
 
-An AI-powered career growth companion that lives on your desktop.
 
-## Prerequisites
+![IMPRO Demo](demo.gif)
 
-- Node.js v24.13.1 or higher
-- An Anthropic API key ([get one here](https://console.anthropic.com/))
+> *Not an employee monitoring system. An AI companion that grows with you.*
+
+IMPRO is a desktop AI companion that continuously analyses your work behaviour, identifies skill gaps, and guides your personal growth — privately, visually, and without your employer watching over your shoulder.
+
+---
+
+## How it works
+
+```
+User data  →  Behaviour analysis  →  TCS skill scoring  →  Gap report  →  Learning path
+```
+
+IMPRO evaluates every employee across three dimensions:
+
+| Dimension | What it measures | How |
+|-----------|-----------------|-----|
+| **T** — Technical | Role-specific skills (e.g. Python, GDPR, CRM) | Behaviour data + ESCO taxonomy |
+| **C** — Cognitive | How you think and reason | Scenario-based assessment (Bloom's Taxonomy) |
+| **S** — Social | Communication, empathy, teamwork | Peer feedback + ESI framework |
+
+Weights are role-specific — a developer's T score matters more than their S score; the opposite is true for sales.
+
+---
+
+## The companion 
+
+Each role gets a companion animal that evolves as you grow (example):
+
+| Role | Companion |
+|------|-----------|
+| Software Engineer | 🐙 Byte the Octopus |
+| Product Lawyer | 🦉 Lex the Owl |
+| Sales Manager | 🦊 Finn the Fox |
+| HR Specialist | 🐕 Scout the Dog |
+
+Earn XP by uploading work data, closing skill gaps, and completing learning. XP unlocks companion evolution and company-defined rewards.
+
+---
 
 ## Setup
 
-1. Clone the repo
+**Prerequisites:** Node.js v24.13.1+
+
 ```bash
-   git clone https://github.com/luuuuukez/IMPRO.git
-   cd IMPRO
+git clone https://github.com/luuuuukez/IMPRO.git
+cd IMPRO
+npm install
 ```
 
-2. Install dependencies
+Create a `.env` file in the root:
+
+```
+ANTHROPIC_API_KEY=your_key_here
+GROQ_API_KEY=your_key_here
+```
+
+Run:
+
 ```bash
-   npm install
+npm start
 ```
 
-3. Create a `.env` file in the root directory
-```bash
-   touch .env
-```
-   Add your API key:
-```
-   ANTHROPIC_API_KEY=your_api_key_here
-```
+---
 
-4. Run the app
-```bash
-   npm start
-```
 
-## What it does
 
-IMPRO is a desktop AI companion that helps you understand 
-your skill gaps and plan your career growth.
-
-- Floating orb that lives on your desktop
-- Chat interface for skill conversations
-- File drop to analyse your skill profile
-- Proactive nudges based on your growth trajectory
-
-## Tech Stack
-
-- Electron + React
-- Claude API (Anthropic)
