@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react'; // useRef kept for future use
 import './chat.css';
 
 const WELCOME = {
@@ -11,54 +11,13 @@ const WELCOME = {
 let nextId = 2;
 const uid = () => nextId++;
 
-function SkillBar({ label, score, color }) {
-  return (
-    <div className="skill-row">
-      <span className="skill-label">{label}</span>
-      <div className="skill-bar-track">
-        <div
-          className="skill-bar-fill"
-          style={{ width: `${score}%`, background: color }}
-        />
-      </div>
-      <span className="skill-score">{score}</span>
-    </div>
-  );
-}
-
-function SkillCard({ data }) {
-  // Derive scores from real data (ratio of strengths to total mentions)
-  const score = (cat) => {
-    const s = cat?.strengths?.length ?? 0;
-    const g = cat?.gaps?.length ?? 0;
-    return s + g === 0 ? 50 : Math.round((s / (s + g)) * 100);
-  };
-
-  const techScore = data ? score(data.technical) : 72;
-  const cogScore  = data ? score(data.cognitive)  : 58;
-  const socScore  = data ? score(data.social)     : 45;
-  const topGap    = data
-    ? (data.technical?.gaps?.[0] ?? data.cognitive?.gaps?.[0] ?? data.social?.gaps?.[0] ?? 'None identified')
-    : 'Distributed systems';
-  const recNote   = data ? data.recommendations?.[0] : '— trending up in market';
-
+function SkillCard() {
   return (
     <div className="skill-card">
-      <div className="skill-role">
-        <span className="skill-role-icon">⬡</span>
-        {data ? 'Skill Profile' : 'Full Stack Developer'}
-      </div>
-      <SkillBar label="Technical" score={techScore} color="linear-gradient(90deg,#6366f1,#818cf8)" />
-      <SkillBar label="Cognitive" score={cogScore}  color="linear-gradient(90deg,#3b82f6,#60a5fa)" />
-      <SkillBar label="Social"    score={socScore}   color="linear-gradient(90deg,#0ea5e9,#38bdf8)" />
-      <div className="skill-gap">
-        <span className="gap-icon">↑</span>
-        <div>
-          <strong>Top gap:</strong> {topGap}<br />
-          {recNote && <span className="gap-sub">{recNote}</span>}
-        </div>
-      </div>
-      <a href="#" className="skill-link" onClick={() => window.electronAPI.openReport()}>
+      <div className="skill-card-orb" />
+      <div className="skill-card-title">TCS Report Ready</div>
+      <div className="skill-card-sub">Your skill analysis is complete</div>
+      <a href="#" className="skill-link" onClick={(e) => { e.preventDefault(); window.electronAPI.openReport(); }}>
         View full report →
       </a>
     </div>
@@ -112,10 +71,17 @@ export default function Chat() {
 
   useEffect(() => { scrollBottom(); }, [messages, typing]);
 
-  // Listen for file drop relayed from orb window
+  // Listen for file drop relayed from orb window (legacy path)
   useEffect(() => {
     if (!window.electronAPI?.onFileDrop) return;
     const unsub = window.electronAPI.onFileDrop((name, filePath) => handleFileAnalysis(name, filePath));
+    return unsub;
+  }, []);
+
+  // Auto-analyse triggered by orb file drop (guaranteed-timing path)
+  useEffect(() => {
+    if (!window.electronAPI?.onAutoAnalyse) return;
+    const unsub = window.electronAPI.onAutoAnalyse((name, filePath) => handleFileAnalysis(name, filePath));
     return unsub;
   }, []);
 

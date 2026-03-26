@@ -15,7 +15,9 @@
       "Bash(rm -f src/main/main.js.bak src/main/preload-fix.js test_electron*.js test_main.js)",
       "Bash(rm -f /tmp/impro_debug.log /tmp/node_init_src.js /tmp/browser_relevant.txt /tmp/make_electron_module.txt)",
       "Skill(claude-api)",
-      "Skill(claude-api:*)"
+      "Skill(claude-api:*)",
+      "Bash(node -e \":*)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }

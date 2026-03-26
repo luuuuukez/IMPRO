@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { reportData } from "@/lib/reportData";
+import { useReportData } from "@/lib/reportData";
 
 const roleFitLabel: Record<string, string> = {
   strong_fit: "Strong Fit",
@@ -8,6 +8,7 @@ const roleFitLabel: Record<string, string> = {
 };
 
 const HeroSection = () => {
+  const reportData = useReportData();
   const date = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
   const roleFit = roleFitLabel[reportData.role_fit] ?? reportData.role_fit;
   const insight = reportData.insights?.[0] ?? "You have room to grow — and a clear path forward.";

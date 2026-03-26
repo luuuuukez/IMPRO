@@ -1,8 +1,8 @@
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, contextBridge } = require('electron');
 
-// Runs before page scripts — inject analysis data synchronously so
-// reportData.ts can read window.IMPRO_DATA at module evaluation time.
 const data = ipcRenderer.sendSync('get-analysis-data');
-if (data) {
-  window.IMPRO_DATA = data;
-}
+console.log('[preload-report] received:', data ? 'data present' : 'null');
+
+// contextIsolation: true means window.IMPRO_DATA = data won't be visible
+// to the page. Use contextBridge to expose it into the main world instead.
+contextBridge.exposeInMainWorld('IMPRO_DATA', data);

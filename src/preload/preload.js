@@ -16,6 +16,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('file-dropped', handler);
     return () => ipcRenderer.removeListener('file-dropped', handler);
   },
+  onAutoAnalyse: (cb) => {
+    const handler = (_, { name, filePath }) => cb(name, filePath);
+    ipcRenderer.on('auto-analyse-file', handler);
+    return () => ipcRenderer.removeListener('auto-analyse-file', handler);
+  },
   onBubbleText: (cb) => {
     const handler = (_, text) => cb(text);
     ipcRenderer.on('set-bubble-text', handler);

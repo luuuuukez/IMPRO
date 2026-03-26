@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IMPRO Report</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #070d1a;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 32px 24px 80px;
+    }
+
+    .page { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 28px;
+      backdrop-filter: blur(12px);
+    }
+
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: #475569; margin-bottom: 18px;
+    }
+
+    /* badges */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 999px;
+      font-size: 12px; font-weight: 600; letter-spacing: .03em;
+    }
+    .badge-green  { background: rgba(34,197,94,.12);  color: #4ade80; border: 1px solid rgba(34,197,94,.25); }
+    .badge-amber  { background: rgba(245,158,11,.12); color: #fbbf24; border: 1px solid rgba(245,158,11,.25); }
+    .badge-red    { background: rgba(239,68,68,.12);  color: #f87171; border: 1px solid rgba(239,68,68,.25); }
+    .badge-blue   { background: rgba(59,130,246,.12); color: #60a5fa; border: 1px solid rgba(59,130,246,.25); }
+
+    /* ── HERO ── */
+    .hero {
+      display: flex; align-items: center; gap: 24px;
+      padding: 32px 28px;
+    }
+    .hero-avatar {
+      width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(59,130,246,0.2);
+      border: 2px solid rgba(59,130,246,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; font-weight: 700; color: #93c5fd;
+    }
+    .hero-info { flex: 1; }
+    .hero-name {
+      font-size: 28px; font-weight: 800;
+      background: linear-gradient(135deg, #93c5fd 0%, #3b82f6 50%, #6366f1 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 6px;
+    }
+    .hero-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .hero-companion {
+      margin-top: 12px; padding: 12px 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+    }
+    .companion-top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .companion-name { font-size: 12px; color: #94a3b8; }
+    .companion-level { font-size: 12px; font-weight: 600; color: #60a5fa; }
+    .xp-track {
+      height: 5px; border-radius: 3px;
+      background: rgba(255,255,255,0.07); overflow: hidden;
+    }
+    .xp-fill {
+      height: 100%; border-radius: 3px;
+      background: linear-gradient(90deg, #3b82f6, #6366f1);
+      width: 68%;
+    }
+    .xp-label { font-size: 10px; color: #374151; margin-top: 4px; }
+
+    /* ── OVERVIEW ── */
+    .overview-text {
+      font-size: 15px; color: #94a3b8; line-height: 1.75;
+    }
+    .overview-text p { margin-bottom: 10px; }
+    .overview-text p:last-child { margin-bottom: 0; }
+
+    /* ── GAPS ── */
+    .gap-card {
+      border: 1px solid rgba(239,68,68,0.2);
+      border-left: 3px solid #ef4444;
+      border-radius: 14px;
+      background: rgba(239,68,68,0.04);
+      padding: 20px 22px;
+      margin-bottom: 10px;
+    }
+    .gap-card:last-child { margin-bottom: 0; }
+    .gap-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .gap-name { font-size: 16px; font-weight: 700; color: #fca5a5; }
+    .gap-rec {
+      font-size: 13px; color: #64748b; line-height: 1.5;
+      padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* ── RADAR ── */
+    .radar-wrap { position: relative; height: 300px; }
+
+    /* ── TECH SKILLS ── */
+    .tech-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .tech-col-head {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      margin-bottom: 12px; padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .tech-col-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+    .tech-pill {
+      padding: 5px 12px; border-radius: 999px;
+      font-size: 12px; font-weight: 500; text-transform: capitalize;
+    }
+    .pill-strong { background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.25); }
+    .pill-gap    { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.3); font-weight: 600; }
+    .pill-none   { background: rgba(100,116,139,0.08); color: #64748b; border: 1px solid rgba(100,116,139,0.15); font-style: italic; }
+    .tech-no-label { font-size: 11px; color: #374151; text-transform: uppercase; letter-spacing: .08em; margin: 12px 0 8px; }
+
+    /* ── COG / SOCIAL bars (no numbers) ── */
+    .dim-grid { display: flex; flex-direction: column; gap: 10px; }
+    .dim-row { display: flex; align-items: center; gap: 10px; }
+    .dim-label { font-size: 12px; color: #94a3b8; width: 140px; flex-shrink: 0; text-transform: capitalize; }
+    .dim-track { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.07); overflow: hidden; }
+    .dim-fill-2 { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #3b82f6, #6366f1); }
+    .dim-fill-1 { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #f59e0b, #ef4444); }
+    .dim-fill-0 { height: 100%; border-radius: 3px; background: rgba(239,68,68,0.3); width: 8% !important; }
+
+    /* ── STRENGTHS ── */
+    .strength-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .strength-pill {
+      padding: 6px 14px; border-radius: 999px;
+      background: rgba(34,197,94,0.1); color: #4ade80;
+      border: 1px solid rgba(34,197,94,0.25);
+      font-size: 13px; font-weight: 500;
+    }
+
+    /* ── RECOMMENDATIONS as cards ── */
+    .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+    .rec-card {
+      background: rgba(59,130,246,0.06);
+      border: 1px solid rgba(59,130,246,0.15);
+      border-radius: 14px; padding: 18px;
+      cursor: pointer; transition: border-color .2s, background .2s;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .rec-card:hover { border-color: rgba(59,130,246,0.4); background: rgba(59,130,246,0.1); }
+    .rec-card-num {
+      width: 26px; height: 26px; border-radius: 8px;
+      background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3);
+      color: #60a5fa; font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .rec-card-text { font-size: 13px; color: #cbd5e1; line-height: 1.55; }
+    .rec-card-arrow { font-size: 11px; color: #3b82f6; margin-top: auto; }
+  </style>
+</head>
+<body>
+<div class="page" id="app"></div>
+
+<script>
+const MOCK = {
+  detected_role: "Software Engineer",
+  technical: {
+    python:           { score: 2, status: "strong" },
+    data_structures:  { score: 2, status: "strong" },
+    system_design:    { score: 2, status: "strong" },
+    api_design:       { score: 2, status: "strong" },
+    database:         { score: 2, status: "strong" },
+    version_control:  { score: 1, status: "gap" },
+    cloud_platforms:  { score: 2, status: "strong" },
+    cicd:             { score: 2, status: "strong" },
+    testing:          { score: 1, status: "gap" },
+    security:         { score: 1, status: "gap" },
+    debugging:        { score: 1, status: "gap" },
+    code_review:      { score: 1, status: "gap" },
+    documentation:    { score: 1, status: "gap" },
+    ide_usage:        { score: 1, status: "gap" },
+    agile:            { score: 1, status: "gap" },
+  },
+  cognitive: { understanding: 2, application: 2, analysis: 2, evaluation: 1, creation: 1, cognitive_score: 8 },
+  social: { empathy: 2, communication: 1, teamwork: 2, conflict_management: 2, service_orientation: 2, influence: 1, social_score: 10 },
+  strengths: ["Strong system design and API design", "Excellent teamwork and service orientation", "Good understanding of cloud platforms"],
+  gaps: ["Version control practices need improvement", "Testing and debugging skills are underdeveloped", "Documentation and agile practices are gaps"],
+  role_fit: "strong_fit",
+  insights: [
+    "Abby has a strong foundation in software engineering, particularly in system design and API design.",
+    "She is an excellent team player with good service orientation skills, but could improve her communication skills.",
+    "Cognitive ability is strong in understanding and analysis, but creation and evaluation need development."
+  ],
+  recommendations: [
+    "Adopt Git best practices and use version control on every project going forward.",
+    "Take a testing fundamentals course and integrate TDD into daily development.",
+    "Improve documentation habits — start with README files and inline comments."
+  ],
+};
+
+// ── Pure utilities (no dependency on d) ──────────────────────────────────────
+function skillName(k) { return k.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase()); }
+function avg(vals) { return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0; }
+function cap(v,mn,mx) { return Math.min(mx, Math.max(mn, v)); }
+
+function getCompanion(role) {
+  const r = (role||'').toLowerCase();
+  if (r.includes('lawyer')||r.includes('legal')) return { emoji:'🦉', name:'Lex the Owl',   level:'Level 2 — Fledgling' };
+  if (r.includes('hr')||r.includes('human'))     return { emoji:'🐕', name:'Scout the Dog', level:'Level 2 — Companion'  };
+  if (r.includes('sales'))                       return { emoji:'🦊', name:'Finn the Fox',  level:'Level 2 — Scout'      };
+  return                                                { emoji:'🐙', name:'Byte the Octopus', level:'Level 2 — Juvenile' };
+}
+
+function getWeights(role) {
+  const r = (role||'').toLowerCase();
+  if (r.includes('lawyer')||r.includes('legal')) return [0.40, 0.25, 0.35];
+  if (r.includes('hr')||r.includes('human'))     return [0.20, 0.45, 0.35];
+  if (r.includes('sales'))                       return [0.15, 0.25, 0.60];
+  return [0.60, 0.25, 0.15];
+}
+
+function getBenchmark(role) {
+  const weights = getWeights(role);
+  const maxW = Math.max(...weights);
+  const r = (role||'').toLowerCase();
+  let base;
+  if (r.includes('lawyer')||r.includes('legal')) base = [2.0, 2.0, 2.5];
+  else if (r.includes('hr')||r.includes('human')) base = [1.5, 2.5, 2.5];
+  else if (r.includes('sales'))                   base = [1.5, 2.0, 3.0];
+  else                                            base = [2.5, 2.0, 1.5];
+  return base.map((v, i) => parseFloat((v * (weights[i] / maxW)).toFixed(2)));
+}
+
+function dimBar(key, val) {
+  const fillClass = val===2 ? 'dim-fill-2' : val===1 ? 'dim-fill-1' : 'dim-fill-0';
+  const style = val===0 ? '' : `width:${(val/2)*100}%`;
+  return `<div class="dim-row">
+    <span class="dim-label">${skillName(key)}</span>
+    <div class="dim-track"><div class="${fillClass}" style="${style}"></div></div>
+  </div>`;
+}
+
+const roleFitLabel = { strong_fit:'Strong Fit', partial_fit:'Partial Fit', weak_fit:'Weak Fit' };
+const roleFitClass = { strong_fit:'badge-green', partial_fit:'badge-amber', weak_fit:'badge-red' };
+const cogKeys = ['understanding','application','analysis','evaluation','creation'];
+const socKeys = ['empathy','communication','teamwork','conflict_management','service_orientation','influence'];
+
+// ── Main render function ──────────────────────────────────────────────────────
+function render(d) {
+  // TCS scores (0-3 scale, then weighted by role)
+  const techEntries = Object.values(d.technical);
+  const techWithEvidence = techEntries.filter(s => s.score > 0);
+  const techAvg = techWithEvidence.length
+    ? avg(techWithEvidence.map(s => s.score))
+    : 0;
+  const techCoverage = techWithEvidence.length / techEntries.length;
+  const cogRaw = d.cognitive.cognitive_score ?? cogKeys.reduce((s,k)=>s+(d.cognitive[k]??0),0);
+  const socRaw = d.social.social_score ?? socKeys.reduce((s,k)=>s+(d.social[k]??0),0);
+
+  const weights = getWeights(d.detected_role);
+  const maxW    = Math.max(...weights);
+
+  const techRaw3 = parseFloat(((techAvg / 2) * 3 * techCoverage).toFixed(2));
+  const cogRaw3  = parseFloat(cap((cogRaw/10)*3,0,3).toFixed(2));
+  const socRaw3  = parseFloat(cap((socRaw/12)*3,0,3).toFixed(2));
+
+  // Cap at 85% of max so there's always room to grow visually
+  const techScore = parseFloat(Math.min(techRaw3 * (weights[0]/maxW), 2.55).toFixed(2));
+  const cogScore  = parseFloat(Math.min(cogRaw3  * (weights[1]/maxW), 2.55).toFixed(2));
+  const socScore  = parseFloat(Math.min(socRaw3  * (weights[2]/maxW), 2.55).toFixed(2));
+
+  const benchmark  = getBenchmark(d.detected_role);
+  const companion  = getCompanion(d.detected_role);
+  const personName = d.person_name || '—';
+  const initials   = (d.person_name || 'A').charAt(0).toUpperCase();
+  const overviewHtml = (d.insights||[]).map(i=>`<p>${i}</p>`).join('');
+
+  const techStrong     = Object.entries(d.technical).filter(([,v])=>v.score===2);
+  const techGap        = Object.entries(d.technical).filter(([,v])=>v.score===1);
+  const techNoEvidence = Object.entries(d.technical).filter(([,v])=>v.score===0);
+
+  document.getElementById('app').innerHTML = `
+
+    <!-- HERO -->
+    <div class="card hero">
+      <div class="hero-avatar">${initials}</div>
+      <div class="hero-info">
+        <div class="hero-name">${personName}</div>
+        <div class="hero-badges">
+          <span class="badge badge-blue">${d.detected_role||'Professional'}</span>
+          <span class="badge ${roleFitClass[d.role_fit]||'badge-amber'}">${roleFitLabel[d.role_fit]||d.role_fit}</span>
+        </div>
+        <div class="hero-companion">
+          <div class="companion-top">
+            <span class="companion-name">${companion.emoji} ${companion.name} — ${companion.level}</span>
+            <span class="companion-level">340 / 500 XP</span>
+          </div>
+          <div class="xp-track"><div class="xp-fill"></div></div>
+          <div class="xp-label">Close your top gap to evolve</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="card">
+      <div class="section-label">Overview</div>
+      <div class="overview-text">${overviewHtml || '<p>Analysis complete. Review your skill profile below.</p>'}</div>
+    </div>
+
+    <!-- GAPS — hero focus, before radar -->
+    <div class="card" style="border-color:rgba(239,68,68,0.2)">
+      <div class="section-label" style="color:#ef4444">⚠ Skill Gaps — Priority Focus</div>
+      ${(d.gaps||[]).map((gap,i)=>`
+        <div class="gap-card">
+          <div class="gap-card-head">
+            <span class="gap-name">${gap}</span>
+            <span class="badge badge-red">Gap</span>
+          </div>
+          ${d.recommendations?.[i]?`
+          <div class="gap-rec">→ &nbsp;${d.recommendations[i]}</div>`:''}
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- TCS RADAR -->
+    <div class="card">
+      <div class="section-label">TCS</div>
+      <div class="radar-wrap">
+        <canvas id="radarChart"></canvas>
+      </div>
+    </div>
+
+    <!-- TECHNICAL SKILLS -->
+    <div class="card">
+      <div class="section-label">Technical Skills</div>
+      <div class="tech-cols">
+        <div>
+          <div class="tech-col-head">
+            <div class="tech-col-dot" style="background:#22c55e"></div>
+            <span style="color:#4ade80">Strong</span>
+            <span style="color:#374151;font-weight:400;margin-left:auto">${techStrong.length}</span>
+          </div>
+          <div class="tech-pills">
+            ${techStrong.length
+              ? techStrong.map(([k])=>`<span class="tech-pill pill-strong">${skillName(k)}</span>`).join('')
+              : '<span style="font-size:13px;color:#374151;font-style:italic">None identified</span>'}
+          </div>
+        </div>
+        <div>
+          <div class="tech-col-head">
+            <div class="tech-col-dot" style="background:#ef4444"></div>
+            <span style="color:#f87171">Gap</span>
+            <span style="color:#374151;font-weight:400;margin-left:auto">${techGap.length}</span>
+          </div>
+          <div class="tech-pills">
+            ${techGap.length
+              ? techGap.map(([k])=>`<span class="tech-pill pill-gap">${skillName(k)}</span>`).join('')
+              : '<span style="font-size:13px;color:#374151;font-style:italic">None identified</span>'}
+          </div>
+          ${techNoEvidence.length?`
+          <div class="tech-no-label">No evidence</div>
+          <div class="tech-pills">
+            ${techNoEvidence.map(([k])=>`<span class="tech-pill pill-none">${skillName(k)}</span>`).join('')}
+          </div>`:''}
+        </div>
+      </div>
+    </div>
+
+    <!-- COGNITIVE + SOCIAL -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="card">
+        <div class="section-label">Cognitive</div>
+        <div class="dim-grid">${cogKeys.map(k=>dimBar(k,d.cognitive[k]??0)).join('')}</div>
+      </div>
+      <div class="card">
+        <div class="section-label">Social</div>
+        <div class="dim-grid">${socKeys.map(k=>dimBar(k,d.social[k]??0)).join('')}</div>
+      </div>
+    </div>
+
+    <!-- STRENGTHS -->
+    <div class="card">
+      <div class="section-label" style="color:#22c55e">✓ Strengths</div>
+      <div class="strength-pills">
+        ${(d.strengths||[]).map(s=>`<span class="strength-pill">${s}</span>`).join('')}
+      </div>
+    </div>
+
+    <!-- RECOMMENDATIONS -->
+    <div class="card">
+      <div class="section-label">Recommended Next Steps</div>
+      <div class="rec-grid">
+        ${(d.recommendations||[]).map((rec,i)=>`
+          <div class="rec-card">
+            <div class="rec-card-num">${i+1}</div>
+            <div class="rec-card-text">${rec}</div>
+            <div class="rec-card-arrow">Explore →</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+  `;
+
+  // Radar chart
+  new Chart(document.getElementById('radarChart').getContext('2d'), {
+    type: 'radar',
+    data: {
+      labels: ['Technical','Cognitive','Social'],
+      datasets: [
+        {
+          label: 'You',
+          data: [techScore, cogScore, socScore],
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.15)',
+          borderWidth: 2,
+          pointBackgroundColor: '#3b82f6',
+          pointRadius: 4,
+        },
+        {
+          label: 'Benchmark',
+          data: benchmark,
+          borderColor: 'rgba(148,163,184,0.35)',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [5,4],
+          pointRadius: 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        r: {
+          min: 0, max: 3,
+          ticks: { display: false, stepSize: 1 },
+          grid:        { color: 'rgba(255,255,255,0.06)' },
+          angleLines:  { color: 'rgba(255,255,255,0.06)' },
+          pointLabels: { color: '#94a3b8', font: { size: 12, weight: '500' } },
+        },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}/3` } },
+      },
+    },
+  });
+}
+
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+function init() {
+  let attempts = 0;
+  const maxAttempts = 20;
+
+  function tryRender() {
+    attempts++;
+    if (window.IMPRO_DATA) {
+      render(window.IMPRO_DATA);
+      return;
+    }
+    if (attempts >= maxAttempts) {
+      render(MOCK);
+      return;
+    }
+    setTimeout(tryRender, 100);
+  }
+
+  tryRender();
+}
+init();
+</script>
+</body>
+</html>

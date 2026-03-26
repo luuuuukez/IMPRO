@@ -1,8 +1,9 @@
 import { Check } from "lucide-react";
 import ScrollReveal from "./ScrollReveal";
-import { reportData } from "@/lib/reportData";
+import { useReportData } from "@/lib/reportData";
 
 const StrengthsSection = () => {
+  const reportData = useReportData();
   const strengths = reportData.strengths?.slice(0, 3) ?? [];
 
   return (

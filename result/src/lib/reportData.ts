@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+
 export interface TechnicalSkill {
   dependency: number;
   capability: number;
@@ -84,4 +86,19 @@ export const MOCK_DATA: ReportData = {
   ],
 };
 
-export const reportData: ReportData = window.IMPRO_DATA || MOCK_DATA;
+export function getReportData(): ReportData {
+  if (window.IMPRO_DATA) return window.IMPRO_DATA;
+  return MOCK_DATA;
+}
+
+export function useReportData(): ReportData {
+  const [data, setData] = useState<ReportData>(getReportData);
+
+  useEffect(() => {
+    const handler = () => setData(getReportData());
+    window.addEventListener('impro-data-ready', handler);
+    return () => window.removeEventListener('impro-data-ready', handler);
+  }, []);
+
+  return data;
+}
