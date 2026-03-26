@@ -128,11 +128,21 @@ function extractPdfText(filePath) {
     const PDFParser = require('pdf2json');
     const parser = new PDFParser();
     parser.on('pdfParser_dataReady', (data) => {
-      const text = data.Pages
-        .flatMap(p => p.Texts)
-        .map(t => decodeURIComponent(t.R[0].T))
-        .join(' ');
-      resolve(text);
+      try {
+        const text = data.Pages
+          .flatMap(p => p.Texts)
+          .map(t => {
+            try {
+              return decodeURIComponent(t.R[0].T);
+            } catch {
+              return t.R[0].T || '';
+            }
+          })
+          .join(' ');
+        resolve(text);
+      } catch (err) {
+        reject(err);
+      }
     });
     parser.on('pdfParser_dataError', reject);
     parser.loadPDF(filePath);
