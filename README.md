@@ -1,5 +1,7 @@
 # IMPRO — Personal AI-powerd Career Growth Companion
 
+#### 🏆 Winner of [SOJHOHACKS 2026](https://www.shadowstack.xyz/sohjo-hacks/)  
+
 
 ![IMPRO Demo](demo.gif)
 
